@@ -1,29 +1,30 @@
+'''
+[2024-11-9] [Note] User messages can be lists of multiple messages at once; 
+    whereas system messages must be only single strings
+'''
+
 import os
 
-from enum import Enum
 from base64 import b64encode
 from typing import Union, Optional
 
+from .types import (
+    UserMessage,
+    ImageDetails,
+    SystemMessage,
+    UserTextMessage,
+    UserImageMessage,
+)
 
-class ImageDetails(str, Enum):
-    AUTO: str = "auto"
-    LOW: str = "low"
-    HIGH: str = "high"
-
-
-def system(message: str) -> dict[str, str]:
+def system(message: str) -> SystemMessage:
     return {"role": "system", "content": message}
 
 
 def user(
-    message: Union[str, dict]
-) -> Optional[dict[str, Union[str, list[dict[str, Union[str, dict]]]]]]:
+    message: Union[str, UserTextMessage, UserImageMessage]
+) -> Optional[UserMessage]:
     if not message: return None
-    if isinstance(message, str):
-        content = {"type": "text", "text": message}
-    else:
-        content = message
-    return {"role": "user", "content": [content]}
+    return {"role": "user", "content": [message]}
 
 
 def _encode_image(image_path: str) -> str:
@@ -34,7 +35,7 @@ def _encode_image(image_path: str) -> str:
 def image(
     image_path: str, 
     detail: str = ImageDetails.AUTO.value,
-) -> dict[str, Union[str, dict[str, str]]]:
+) -> UserImageMessage:
     if detail not in ImageDetails:
             return None
 
